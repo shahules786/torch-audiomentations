@@ -1,16 +1,15 @@
 from turtle import forward
 import torch
 import typing
-from typing import int 
 
-class RandomCrop():
+class RandomCrop(torch.nn.Module):
 
     requires_sample_rate = True
 
     def __init__(
         self,
         seconds: int,
-        sampling_rate: typing.Optional[int] = None
+        sampling_rate: int
     ):
         self.sampling_rate = sampling_rate
         self.num_samples = self.sampling_rate * seconds
@@ -24,14 +23,17 @@ class RandomCrop():
 
         sample_length = samples.shape[2] / sample_rate
         if sample_length < self.num_samples:
-            raise RuntimeWarning("audio length less than cropping length")
             self.num_samples = sample_length
+            raise RuntimeWarning("audio length less than cropping length")
+            
         
         start_indices = torch.randint(0,samples.shape[2] - self.num_samples,(sample_length.shape[0],))
-
+        samples_cropped = torch.empty((samples.shape[0],samples.shape[1],self.num_samples))
         for i,sample in enumerate(samples):
-            ## sample[:,:,start_indices[i]:start_indices[i]+self.num_samples]
-            ## stack and return results 
+            samples_cropped[i] = sample[:,:,start_indices[i]:start_indices[i]+self.num_samples]
+        
+        return samples_cropped
+
 
 
 
